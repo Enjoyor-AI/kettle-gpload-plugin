@@ -112,6 +112,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
   private GPLoadMeta input;
   private TextVar wDelimiter;
   private Text wUpdateCondition;
+  private TextVar wmaxlinelength;
 
   /**
    * List of ColumnInfo that should have the field names of the selected database table
@@ -382,6 +383,8 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     wDataFile.addSelectionListener( lsDef );
     wLogFile.addSelectionListener( lsDef );
     wNullAs.addSelectionListener( lsDef );
+    //maxlinelength
+    wmaxlinelength.addSelectionListener( lsDef );
 
     // Detect X or ALT-F4 or something that kills this window...
     shell.addShellListener( new ShellAdapter() {
@@ -672,6 +675,10 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     if ( input.getNullAs() != null ) {
       wNullAs.setText( input.getNullAs() );
     }
+    //wmaxlinelength
+    if ( input.getmaxlinelength() != null ) {
+    	wmaxlinelength.setText( input.getmaxlinelength() );
+      }
     if ( input.getEncoding() != null ) {
       wEncoding.setText( input.getEncoding() );
     }
@@ -770,6 +777,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     inf.setDataFile( wDataFile.getText() );
     inf.setLogFile( wLogFile.getText() );
     inf.setNullAs( wNullAs.getText() );
+    inf.setmaxlinelength( wmaxlinelength.getText() );
     inf.setEncoding( wEncoding.getText() );
     inf.setEraseFiles( wEraseFiles.getSelection() );
     inf.setLocalhostPort( wLocalhostPort.getText() );
@@ -1359,6 +1367,25 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     fdEncoding.right = new FormAttachment( 75, 0 );
     wEncoding.setLayoutData( fdEncoding );
     wEncoding.addModifyListener( lsMod );
+    
+ // maxlinelength parameter
+    Label wlmaxlinelength = new Label( wGPConfigTabComp, SWT.RIGHT );
+    wlmaxlinelength.setText( BaseMessages.getString( PKG, "GPLoadDialog.maxlinelength.Label" ) );
+    props.setLook( wlmaxlinelength );
+    FormData fdlmaxlinelength = new FormData();
+    fdlmaxlinelength.left = new FormAttachment( 0, 0 );
+    fdlmaxlinelength.top = new FormAttachment( wEncoding, margin );
+    fdlmaxlinelength.right = new FormAttachment( middle, -margin );
+    wlmaxlinelength.setLayoutData( fdlmaxlinelength );
+
+    wmaxlinelength = new TextVar( transMeta, wGPConfigTabComp, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    props.setLook( wmaxlinelength );
+    wmaxlinelength.addModifyListener( lsMod );
+    FormData fdmaxlinelength = new FormData();
+    fdmaxlinelength.left = new FormAttachment( middle, 0 );
+    fdmaxlinelength.top = new FormAttachment( wEncoding, margin );
+    wmaxlinelength.setLayoutData( fdmaxlinelength );
+    
 
     wGPConfigTabComp.layout();
     tabItem.setControl( wGPConfigTabComp );

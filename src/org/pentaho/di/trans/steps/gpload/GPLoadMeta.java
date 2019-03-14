@@ -135,6 +135,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 
   /** Update condition **/
   private String updateCondition;
+  //maxlinelength
+  private String maxlinelength;
 
   /*
    * Encodings supported by GPLoad. This list was obtained from the GPAAdminGuide.
@@ -309,6 +311,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
       delimiter = XMLHandler.getTagValue( stepnode, "delimiter" );
       logFile = XMLHandler.getTagValue( stepnode, "log_file" );
       nullAs = XMLHandler.getTagValue( stepnode, "null_as" );
+      //maxlinelength
+      maxlinelength=XMLHandler.getTagValue(stepnode, "maxlinelength");
       eraseFiles = "Y".equalsIgnoreCase( XMLHandler.getTagValue( stepnode, "erase_files" ) );
       encoding = XMLHandler.getTagValue( stepnode, "encoding" );
       updateCondition = XMLHandler.getTagValue( stepnode, "update_condition" );
@@ -373,6 +377,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
     dataFile = "load${Internal.Step.CopyNr}.dat";
     logFile = "";
     nullAs = "";
+    maxlinelength="1048576";
     encoding = "";
     delimiter = ",";
     encloseNumbers = false;
@@ -400,6 +405,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
     retval.append( "    " ).append( XMLHandler.addTagValue( "delimiter", delimiter ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "log_file", logFile ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "null_as", nullAs ) );
+    //maxlinelength
+    retval.append( "    " ).append( XMLHandler.addTagValue("maxlinelength", maxlinelength));
     retval.append( "    " ).append( XMLHandler.addTagValue( "erase_files", eraseFiles ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "encoding", encoding ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "enclose_numbers", ( encloseNumbers ? "Y" : "N" ) ) );
@@ -441,6 +448,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
       delimiter = rep.getStepAttributeString( id_step, "delimiter" );
       logFile = rep.getStepAttributeString( id_step, "log_file" );
       nullAs = rep.getStepAttributeString( id_step, "null_as" );
+      //maxlinelength
+      maxlinelength=rep.getStepAttributeString(id_step, "maxlinelength");
       eraseFiles = rep.getStepAttributeBoolean( id_step, "erase_files" );
       encoding = rep.getStepAttributeString( id_step, "encoding" );
       localhostPort = rep.getStepAttributeString( id_step, "localhost_port" );
@@ -486,6 +495,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
       rep.saveStepAttribute( id_transformation, id_step, "delimiter", delimiter );
       rep.saveStepAttribute( id_transformation, id_step, "log_file", logFile );
       rep.saveStepAttribute( id_transformation, id_step, "null_as", nullAs );
+      //maxlinelength
+      rep.saveStepAttribute( id_transformation, id_step, "maxlinelength", maxlinelength);
       rep.saveStepAttribute( id_transformation, id_step, "erase_files", eraseFiles );
       rep.saveStepAttribute( id_transformation, id_step, "encoding", encoding );
       rep.saveStepAttribute( id_transformation, id_step, "enclose_numbers", ( encloseNumbers ? "Y" : "N" ) );
@@ -814,6 +825,14 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 
   public void setNullAs( String nullAs ) {
     this.nullAs = nullAs;
+  }
+  //maxlinelength
+  public String getmaxlinelength() {
+	  return maxlinelength;
+  }
+  public void setmaxlinelength(String maxlinelength)
+  {
+	  this.maxlinelength=maxlinelength;
   }
 
   public void setLoadAction( String action ) {

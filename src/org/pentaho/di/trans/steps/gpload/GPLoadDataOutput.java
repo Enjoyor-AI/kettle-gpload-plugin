@@ -127,7 +127,11 @@ public class GPLoadDataOutput {
   private String createEscapedString( String orig, String enclosure ) {
     StringBuffer buf = new StringBuffer( orig );
 
-    Const.repl( buf, enclosure, enclosure + enclosure );
+    Const.repl( buf, enclosure, "" );
+    Const.repl( buf, "\r\n", "" ); 
+    Const.repl( buf, "\r", "" ); 
+    Const.repl( buf, "\n", "" ); 
+    Const.repl( buf, "\t", "" ); 
     return buf.toString();
   }
 
@@ -151,6 +155,11 @@ public class GPLoadDataOutput {
           throw new KettleException( BaseMessages.getString( PKG, "GPload.Exception.DelimiterMissing" ) );
         }
       }
+    //增加自动识别字段
+    	if(!(meta.getFieldTable().length>0))
+    	{
+    		meta.setFieldStream(mi.getFieldNames());
+    	}
 
       // Setup up the fields we need to take for each of the rows
       // as this speeds up processing.
@@ -186,8 +195,9 @@ public class GPLoadDataOutput {
         switch ( v.getType() ) {
           case ValueMetaInterface.TYPE_STRING:
             String s = mi.getString( row, number );
-            if ( s.indexOf( enclosure ) >= 0 ) {
-              s = createEscapedString( s, enclosure );
+            //替换特殊分割字符
+            if ( s.indexOf( enclosure ) !=-1 ) {
+              s = createEscapedString( s, delimiter );
             }
             output.print( enclosure );
             output.print( s );

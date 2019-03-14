@@ -36,6 +36,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
@@ -279,7 +280,10 @@ public class GPLoad extends BaseStep implements StepInterface {
     // See also page 155 for formatting information & escaping
     // delimiter validation should have been perfomed
     contents.append( GPLoad.INDENT ).append( "- FORMAT: TEXT" ).append( Const.CR );
+    //ESCAPE
     contents.append( GPLoad.INDENT ).append( "- ESCAPE: 'OFF'" ).append( Const.CR );
+    //maxlinelength
+    contents.append( GPLoad.INDENT ).append( "- MAX_LINE_LENGTH: " ).append(Integer.parseInt(meta.getmaxlinelength())).append( Const.CR );
     contents.append( GPLoad.INDENT ).append( "- DELIMITER: " ).append( GPLoad.SINGLE_QUOTE ).append( delimiter )
         .append( GPLoad.SINGLE_QUOTE ).append( Const.CR );
 //  if ( !Const.isEmpty( meta.getNullAs() ) ) {
@@ -400,6 +404,14 @@ public class GPLoad extends BaseStep implements StepInterface {
    * @throws KettleException
    */
   public void createControlFile( GPLoadMeta meta ) throws KettleException {
+	//增加自动识别字段
+  	if(!(meta.getFieldTable().length>0))
+  	{
+  		meta.setFieldTable(this.getInputRowMeta().getFieldNames());
+  	}
+  	
+  	
+	  
     String filename = meta.getControlFile();
     if ( Const.isEmpty( filename ) ) {
       throw new KettleException( BaseMessages.getString( PKG, "GPLoad.Exception.NoControlFileSpecified" ) );
@@ -571,6 +583,7 @@ public class GPLoad extends BaseStep implements StepInterface {
     data = (GPLoadData) sdi;
 
     try {
+    
       Object[] r = getRow(); // Get row from input rowset & set row busy!
       // no more input to be expected...
       if ( r == null ) {
