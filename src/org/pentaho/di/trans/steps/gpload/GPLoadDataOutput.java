@@ -126,12 +126,12 @@ public class GPLoadDataOutput {
 
   private String createEscapedString( String orig, String enclosure ) {
     StringBuffer buf = new StringBuffer( orig );
-
-    Const.repl( buf, enclosure, "" );
-    Const.repl( buf, "\r\n", "" ); 
-    Const.repl( buf, "\r", "" ); 
-    Const.repl( buf, "\n", "" ); 
-    Const.repl( buf, "\t", "" ); 
+//
+//    Const.repl( buf, enclosure, "" );
+//    Const.repl( buf, "\r\n", "" ); 
+//    Const.repl( buf, "\r", "" ); 
+//    Const.repl( buf, "\n", "" ); 
+//    Const.repl( buf, "\t", "" ); 
     return buf.toString();
   }
 
@@ -196,9 +196,15 @@ public class GPLoadDataOutput {
           case ValueMetaInterface.TYPE_STRING:
             String s = mi.getString( row, number );
             //Ìæ»»ÌØÊâ·Ö¸î×Ö·û
-            if ( s.indexOf( enclosure ) !=-1 ) {
-              s = createEscapedString( s, delimiter );
-            }
+//            if ( s.indexOf( enclosure ) !=-1 ) {
+//              s = createEscapedString( s, delimiter );
+//            }
+            s=s.replace("\r", "").replace("\n", "").replace(delimiter, "gennlife").replace("\t","").replaceAll("\0x00", "").replaceAll("\u0000", "");
+//            String s1=s.replace("\r", "");
+//            String s2=s1.replace("\n", "");
+//            String s3=s2.replace("\t", "");
+//            String s4 =s3.replace(delimiter, "gennlife");
+            
             output.print( enclosure );
             output.print( s );
             output.print( enclosure );

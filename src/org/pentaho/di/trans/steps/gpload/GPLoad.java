@@ -337,7 +337,13 @@ public class GPLoad extends BaseStep implements StepInterface {
         contents.append( GPLoad.INDENT ).append( "- ERROR_TABLE: " ).append( errorTableName ).append( Const.CR );
       }
     }
-
+    String truncate=meta.gettruncate();
+    if(!Const.isEmpty(truncate)) 
+    {
+    contents.append( GPLoad.INDENT ).append( "PRELOAD:" ).append( Const.CR );
+    contents.append( GPLoad.INDENT ).append( "- TRUNCATE: " ).append(truncate).append( Const.CR );
+    contents.append( GPLoad.INDENT ).append( "- REUSE_TABLES: TRUE " ).append( Const.CR );
+    }
     // -------------- OUTPUT section
 
     contents.append( GPLoad.INDENT ).append( "OUTPUT:" ).append( Const.CR );
@@ -535,6 +541,7 @@ public class GPLoad extends BaseStep implements StepInterface {
       sbCommandLine.append( getPath( meta.getLogFile(), BaseMessages.getString( PKG,
           "GPLoad.Exception.LogFilePathMissing" ), false ) );
     }
+    sbCommandLine.append( " -V " );
     return sbCommandLine.toString();
   }
 

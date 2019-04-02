@@ -113,6 +113,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
   private TextVar wDelimiter;
   private Text wUpdateCondition;
   private TextVar wmaxlinelength;
+  private TextVar wtruncate;
 
   /**
    * List of ColumnInfo that should have the field names of the selected database table
@@ -385,6 +386,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     wNullAs.addSelectionListener( lsDef );
     //maxlinelength
     wmaxlinelength.addSelectionListener( lsDef );
+    wtruncate.addSelectionListener(lsDef);
 
     // Detect X or ALT-F4 or something that kills this window...
     shell.addShellListener( new ShellAdapter() {
@@ -679,6 +681,10 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     if ( input.getmaxlinelength() != null ) {
     	wmaxlinelength.setText( input.getmaxlinelength() );
       }
+    if(input.gettruncate()!=null)
+    {
+    	wtruncate.setText(input.gettruncate());
+    }
     if ( input.getEncoding() != null ) {
       wEncoding.setText( input.getEncoding() );
     }
@@ -778,6 +784,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     inf.setLogFile( wLogFile.getText() );
     inf.setNullAs( wNullAs.getText() );
     inf.setmaxlinelength( wmaxlinelength.getText() );
+    inf.settruncate(wtruncate.getText());
     inf.setEncoding( wEncoding.getText() );
     inf.setEraseFiles( wEraseFiles.getSelection() );
     inf.setLocalhostPort( wLocalhostPort.getText() );
@@ -1385,6 +1392,26 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     fdmaxlinelength.left = new FormAttachment( middle, 0 );
     fdmaxlinelength.top = new FormAttachment( wEncoding, margin );
     wmaxlinelength.setLayoutData( fdmaxlinelength );
+    
+    //TRUNCATE parameter
+    Label wltruncate = new Label( wGPConfigTabComp, SWT.RIGHT );
+    wltruncate.setText( BaseMessages.getString( PKG, "GPLoadDialog.truncate.Label" ) );
+    props.setLook( wltruncate );
+    FormData fdltruncate = new FormData();
+    fdltruncate.left = new FormAttachment( 0, 0 );
+    fdltruncate.top = new FormAttachment( wmaxlinelength, margin );
+    fdltruncate.right = new FormAttachment( middle, -margin );
+    wltruncate.setLayoutData( fdltruncate );
+
+    wtruncate = new TextVar( transMeta, wGPConfigTabComp, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    props.setLook( wtruncate );
+    wtruncate.addModifyListener( lsMod );
+    FormData fdtruncate = new FormData();
+    fdtruncate.left = new FormAttachment( middle, 0 );
+    fdtruncate.top = new FormAttachment( wmaxlinelength, margin );
+    wtruncate.setLayoutData( fdtruncate );
+    
+    
     
 
     wGPConfigTabComp.layout();
