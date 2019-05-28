@@ -380,7 +380,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
     dataFile = "load${Internal.Step.CopyNr}.dat";
     logFile = "";
     nullAs = "";
-    maxlinelength="1048576";
+    maxlinelength="1048576";//268435456
     truncate="true";
     encoding = "";
     delimiter = ",";
