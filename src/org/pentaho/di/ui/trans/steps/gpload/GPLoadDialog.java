@@ -114,6 +114,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
   private Text wUpdateCondition;
   private TextVar wmaxlinelength;
   private TextVar wtruncate;
+  private TextVar wtEncoding;
 
   /**
    * List of ColumnInfo that should have the field names of the selected database table
@@ -387,6 +388,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     //maxlinelength
     wmaxlinelength.addSelectionListener( lsDef );
     wtruncate.addSelectionListener(lsDef);
+    wtEncoding.addSelectionListener(lsDef);
 
     // Detect X or ALT-F4 or something that kills this window...
     shell.addShellListener( new ShellAdapter() {
@@ -685,6 +687,11 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     {
     	wtruncate.setText(input.gettruncate());
     }
+    if(input.getwtencod()!=null)
+    {
+    	wtEncoding.setText(input.getwtencod());
+    }
+    
     if ( input.getEncoding() != null ) {
       wEncoding.setText( input.getEncoding() );
     }
@@ -785,6 +792,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     inf.setNullAs( wNullAs.getText() );
     inf.setmaxlinelength( wmaxlinelength.getText() );
     inf.settruncate(wtruncate.getText());
+    inf.setwtencod(wtEncoding.getText());
     inf.setEncoding( wEncoding.getText() );
     inf.setEraseFiles( wEraseFiles.getSelection() );
     inf.setLocalhostPort( wLocalhostPort.getText() );
@@ -1410,6 +1418,24 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     fdtruncate.left = new FormAttachment( middle, 0 );
     fdtruncate.top = new FormAttachment( wmaxlinelength, margin );
     wtruncate.setLayoutData( fdtruncate );
+    
+    
+    Label wlwtEncoding = new Label( wGPConfigTabComp, SWT.RIGHT );
+    wlwtEncoding.setText( BaseMessages.getString( PKG, "GPLoadDialog.wtencod.Label" ) );
+    props.setLook( wlwtEncoding );
+    FormData fdlwlwtEncoding = new FormData();
+    fdlwlwtEncoding.left = new FormAttachment( 0, 0 );
+    fdlwlwtEncoding.top = new FormAttachment( wtruncate, margin );
+    fdlwlwtEncoding.right = new FormAttachment( middle, -margin );
+    wlwtEncoding.setLayoutData( fdlwlwtEncoding );
+    
+    wtEncoding = new TextVar( transMeta, wGPConfigTabComp, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    props.setLook( wtEncoding );
+    wtEncoding.addModifyListener( lsMod );
+    FormData fdwtEncoding = new FormData();
+    fdwtEncoding.left = new FormAttachment( middle, 0 );
+    fdwtEncoding.top = new FormAttachment( wtruncate, margin );
+    wtEncoding.setLayoutData( fdwtEncoding );
     
     
     

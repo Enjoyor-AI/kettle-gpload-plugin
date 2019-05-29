@@ -179,7 +179,7 @@ public class GPLoadDataOutput {
     // Write the data to the output
     ValueMetaInterface v = null;
     int number = 0;
-
+String endocing=meta.getwtencod();
     for ( int i = 0; i < fieldNumbers.length; i++ ) {
       // TODO: variable substitution
       if ( i != 0 ) {
@@ -257,9 +257,16 @@ public class GPLoadDataOutput {
             break;
           case ValueMetaInterface.TYPE_BINARY:
             byte[] byt = mi.getBinary( row, number );
-            output.print( "<startlob>" );
-            output.print( byt );
-            output.print( "<endlob>" );
+            String string="";
+            try {
+            string=new String(byt,endocing);}
+            catch (Exception e) {
+				// TODO: handle exception
+			}
+            string=string.replace("\r", "").replace("\n", "").replace(delimiter, "gennlife").replace("\t","").replaceAll("\0x00", "").replaceAll("\u0000", "");
+            output.print( enclosure );
+            output.print( string );
+            output.print( enclosure );
             break;
           case ValueMetaInterface.TYPE_TIMESTAMP:
             Date time = mi.getDate( row, number );
