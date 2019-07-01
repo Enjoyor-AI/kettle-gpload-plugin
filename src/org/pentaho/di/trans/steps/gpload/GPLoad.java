@@ -542,6 +542,7 @@ public class GPLoad extends BaseStep implements StepInterface {
           "GPLoad.Exception.LogFilePathMissing" ), false ) );
     }
     sbCommandLine.append( " -V " );
+    sbCommandLine.append( " --gpfdist_timeout 7200 " );
     return sbCommandLine.toString();
   }
 

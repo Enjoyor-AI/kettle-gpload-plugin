@@ -135,6 +135,25 @@ public class GPLoadDataOutput {
     return buf.toString();
   }
 
+  
+  /**
+   * 数组转换成十六进制字符串
+   * @param byte[]
+   * @return HexString
+   */
+  public static final String bytesToHexString(byte[] bArray) {
+   StringBuffer sb = new StringBuffer(bArray.length);
+   String sTemp;
+   for (int i = 0; i < bArray.length; i++) {
+    sTemp = Integer.toHexString(0xFF & bArray[i]);
+    if (sTemp.length() < 2)
+     sb.append(0);
+    sb.append(sTemp.toUpperCase());
+   }
+   return sb.toString();
+  }
+  
+  
   public void writeLine( RowMetaInterface mi, Object[] row ) throws KettleException {
     if ( first ) {
       first = false;
@@ -199,8 +218,11 @@ String endocing=meta.getwtencod();
 //            if ( s.indexOf( enclosure ) !=-1 ) {
 //              s = createEscapedString( s, delimiter );
 //            }
+            if(s!=null)
+            {
             s=s.replace("\r", "").replace("\n", "").replace(delimiter, "gennlife").replace("\t","").replaceAll("\0x00", "").replaceAll("\u0000", "");
-//            String s1=s.replace("\r", "");
+            }
+            //            String s1=s.replace("\r", "");
 //            String s2=s1.replace("\n", "");
 //            String s3=s2.replace("\t", "");
 //            String s4 =s3.replace(delimiter, "gennlife");
@@ -257,13 +279,14 @@ String endocing=meta.getwtencod();
             break;
           case ValueMetaInterface.TYPE_BINARY:
             byte[] byt = mi.getBinary( row, number );
-            String string="";
-            try {
-            string=new String(byt,endocing);}
-            catch (Exception e) {
+           // String string="";
+            //try {
+            //string=new String(byt,endocing);}
+           // catch (Exception e) {
 				// TODO: handle exception
-			}
-            string=string.replace("\r", "").replace("\n", "").replace(delimiter, "gennlife").replace("\t","").replaceAll("\0x00", "").replaceAll("\u0000", "");
+		//	}
+           // string=string.replace("\r", "").replace("\n", "").replace(delimiter, "gennlife").replace("\t","").replaceAll("\0x00", "").replaceAll("\u0000", "");
+            String string=bytesToHexString(byt);
             output.print( enclosure );
             output.print( string );
             output.print( enclosure );
