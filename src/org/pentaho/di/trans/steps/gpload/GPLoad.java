@@ -272,6 +272,11 @@ public class GPLoad extends BaseStep implements StepInterface {
       contents.append( GPLoad.INDENT ).append( "- COLUMNS: " ).append( Const.CR );
 
       for ( String columnName : tableFields ) {
+    	  if(meta.islowertables())
+    	  {
+    		  columnName=columnName.toLowerCase();
+    	  }
+    	  
         contents.append( GPLoad.INDENT ).append( GPLoad.INDENT ).append( GPLoad.SPACE_PADDED_DASH ).append(
             databaseMeta.quoteField( columnName ) ).append( GPLoad.COLON ).append( Const.CR );
       }

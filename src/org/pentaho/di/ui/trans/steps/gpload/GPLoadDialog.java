@@ -109,6 +109,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
   private TextVar wNullAs;
   private Combo wEncoding;
   private Button wEraseFiles;
+  private Button wlowerTables;
   private GPLoadMeta input;
   private TextVar wDelimiter;
   private Text wUpdateCondition;
@@ -291,6 +292,30 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
         input.setChanged();
       }
     } );
+ // lower table line
+    Label wllowerTables = new Label( shell, SWT.RIGHT );
+    wllowerTables.setText( BaseMessages.getString( PKG, "GPLoadDialog.lowertable.Label" ) );
+    props.setLook( wllowerTables );
+    FormData fdllowerTables = new FormData();
+    fdllowerTables.left = new FormAttachment( 0, 0 );
+    fdllowerTables.top = new FormAttachment( wlEraseFiles, margin );
+    fdllowerTables.right = new FormAttachment( middle, -margin );
+    wllowerTables.setLayoutData( fdllowerTables );
+    wlowerTables = new Button( shell, SWT.CHECK );
+    props.setLook( wlowerTables );
+    FormData fdlowerTables = new FormData();
+    fdlowerTables.left = new FormAttachment( middle, 0 );
+    fdlowerTables.top = new FormAttachment( wlEraseFiles, margin );
+    fdlowerTables.right = new FormAttachment( 100, 0 );
+    wlowerTables.setLayoutData( fdlowerTables );
+    wlowerTables.addSelectionListener( new SelectionAdapter() {
+      public void widgetSelected( SelectionEvent e ) {
+        input.setChanged();
+      }
+    } );
+    
+    
+    
 
     // The Tab folder for field/columns, localhosts and Greenplum configuration
     wTabFolder = new CTabFolder( shell, SWT.BORDER );
@@ -306,7 +331,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     // ///////////////////////////////////////////////////////////
     FormData fdTabFolder = new FormData();
     fdTabFolder.left = new FormAttachment( 0, 0 );
-    fdTabFolder.top = new FormAttachment( wEraseFiles, margin );
+    fdTabFolder.top = new FormAttachment( wlowerTables, margin );
     fdTabFolder.right = new FormAttachment( 100, 0 );
     fdTabFolder.bottom = new FormAttachment( 100, -50 );
     wTabFolder.setLayoutData( fdTabFolder );
@@ -702,6 +727,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
       wUpdateCondition.setText( input.getUpdateCondition() );
     }
     this.wEraseFiles.setSelection( input.isEraseFiles() );
+    this.wlowerTables.setSelection( input.islowertables() );
 
     String method = input.getLoadMethod();
     // if ( GPLoadMeta.METHOD_AUTO_CONCURRENT.equals(method) )
@@ -795,6 +821,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     inf.setwtencod(wtEncoding.getText());
     inf.setEncoding( wEncoding.getText() );
     inf.setEraseFiles( wEraseFiles.getSelection() );
+    inf.setlowertables(wlowerTables.getSelection());    
     inf.setLocalhostPort( wLocalhostPort.getText() );
     inf.setDelimiter( wDelimiter.getText() );
     inf.setUpdateCondition( wUpdateCondition.getText() );

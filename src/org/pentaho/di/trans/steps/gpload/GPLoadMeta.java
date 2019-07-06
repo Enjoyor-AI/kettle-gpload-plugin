@@ -123,6 +123,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 
   /** Erase files after use */
   private boolean eraseFiles;
+  
+  private boolean lowertables;
 
   /** Boolean to indicate that numbers are to be enclosed */
   private boolean encloseNumbers;
@@ -320,6 +322,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
       truncate=XMLHandler.getTagValue(stepnode, "truncate");
       wtEncoding=XMLHandler.getTagValue(stepnode, "wtEncoding");
       eraseFiles = "Y".equalsIgnoreCase( XMLHandler.getTagValue( stepnode, "erase_files" ) );
+      lowertables = "Y".equalsIgnoreCase( XMLHandler.getTagValue( stepnode, "lowertables" ) );
+      
       encoding = XMLHandler.getTagValue( stepnode, "encoding" );
       updateCondition = XMLHandler.getTagValue( stepnode, "update_condition" );
 
@@ -390,6 +394,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
     delimiter = ",";
     encloseNumbers = false;
     eraseFiles = true;
+    lowertables=true;
     updateCondition = "";
 
     allocate( 0 );
@@ -418,6 +423,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
     retval.append( "    " ).append( XMLHandler.addTagValue("truncate", truncate));
     retval.append( "    " ).append( XMLHandler.addTagValue("wtEncoding", wtEncoding));
     retval.append( "    " ).append( XMLHandler.addTagValue( "erase_files", eraseFiles ) );
+    retval.append( "    " ).append( XMLHandler.addTagValue( "lowertables", lowertables ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "encoding", encoding ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "enclose_numbers", ( encloseNumbers ? "Y" : "N" ) ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "localhost_port", localhostPort ) );
@@ -463,6 +469,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
       truncate =rep.getStepAttributeString(id_step, "truncate");
       wtEncoding=rep.getStepAttributeString(id_step, "wtEncoding");
       eraseFiles = rep.getStepAttributeBoolean( id_step, "erase_files" );
+      lowertables = rep.getStepAttributeBoolean( id_step, "lowertables" );
       encoding = rep.getStepAttributeString( id_step, "encoding" );
       localhostPort = rep.getStepAttributeString( id_step, "localhost_port" );
       encloseNumbers =
@@ -512,6 +519,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
       rep.saveStepAttribute( id_transformation, id_step, "truncate", truncate);
       rep.saveStepAttribute( id_transformation, id_step, "wtEncoding", wtEncoding);
       rep.saveStepAttribute( id_transformation, id_step, "erase_files", eraseFiles );
+      rep.saveStepAttribute( id_transformation, id_step, "lowertables", lowertables );
       rep.saveStepAttribute( id_transformation, id_step, "encoding", encoding );
       rep.saveStepAttribute( id_transformation, id_step, "enclose_numbers", ( encloseNumbers ? "Y" : "N" ) );
       rep.saveStepAttribute( id_transformation, id_step, "localhost_port", localhostPort );
@@ -909,6 +917,13 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
   public void setEraseFiles( boolean eraseFiles ) {
     this.eraseFiles = eraseFiles;
   }
+  public boolean islowertables() {
+	    return lowertables;
+	  }
+
+	  public void setlowertables( boolean lowertables ) {
+	    this.lowertables = lowertables;
+	  }
 
   public String getMaxErrors() {
     return maxErrors;
