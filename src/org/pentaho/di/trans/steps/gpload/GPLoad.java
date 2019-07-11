@@ -42,7 +42,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
@@ -52,6 +55,7 @@ import org.pentaho.di.core.database.Database;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowMetaInterface;
+import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.core.vfs.KettleVFS;
 import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.Trans;
@@ -672,6 +676,194 @@ public class GPLoad extends BaseStep implements StepInterface {
 
 	}
 
+	private void closeOutput() throws Exception {
+		if (data.fifoStream != null) {
+			// Close the fifo file...
+			//
+			data.fifoStream.close();
+			data.fifoStream = null;
+		}
+		if (data.gploadexec != null) {
+
+			data.gploadexec.join(3000);
+			Gploadexec gploadexecs = data.gploadexec;
+			data.gploadexec = null;
+			gploadexecs.checkExcn();
+		}
+	}
+
+	private SimpleDateFormat sdfDate = null;
+	private SimpleDateFormat sdfDateTime = null;
+
+	private int[] fieldNumbers = null;
+	private String enclosure = null;
+	private String delimiter = null;
+
+	public void writeLinefifo(RowMetaInterface mi, Object[] row) throws KettleException {
+		try {
+			if (first) {
+				first = false;
+
+				
+			}
+
+			// Write the data to the output
+			ValueMetaInterface v = null;
+			int number = 0;
+			String endocing = meta.getwtencod();
+			for (int i = 0; i < fieldNumbers.length; i++) {
+				// TODO: variable substitution
+				if (i != 0) {
+					data.fifoStream.write(delimiter.getBytes());
+				}
+				number = fieldNumbers[i];
+				v = mi.getValueMeta(number);
+				if (row[number] == null) {
+					// TODO (SB): special check for null in case of Strings.
+					data.fifoStream.write(enclosure.getBytes());
+					data.fifoStream.write(enclosure.getBytes());
+				} else {
+					switch (v.getType()) {
+					case ValueMetaInterface.TYPE_STRING:
+						String s = mi.getString(row, number);
+						// 替换特殊分割字符
+						// if ( s.indexOf( enclosure ) !=-1 ) {
+						// s = createEscapedString( s, delimiter );
+						// }
+						if (s != null) {
+							s = s.replace("\r", "").replace("\n", "").replace(delimiter, "gennlife").replace("\t", "")
+									.replaceAll("\0x00", "").replaceAll("\u0000", "");
+						}
+						// String s1=s.replace("\r", "");
+						// String s2=s1.replace("\n", "");
+						// String s3=s2.replace("\t", "");
+						// String s4 =s3.replace(delimiter, "gennlife");
+						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(s.getBytes());
+						data.fifoStream.write(delimiter.getBytes());
+
+						break;
+					case ValueMetaInterface.TYPE_INTEGER:
+						Long l = mi.getInteger(row, number);
+						if (meta.getEncloseNumbers()) {
+							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(String.valueOf(1).getBytes());
+							data.fifoStream.write(delimiter.getBytes());
+						} else {
+							data.fifoStream.write(String.valueOf(1).getBytes());
+						}
+						break;
+					case ValueMetaInterface.TYPE_NUMBER:
+						Double d = mi.getNumber(row, number);
+						if (meta.getEncloseNumbers()) {
+
+							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(String.valueOf(d).getBytes());
+							data.fifoStream.write(delimiter.getBytes());
+						} else {
+							data.fifoStream.write(String.valueOf(d).getBytes());
+						}
+						break;
+					case ValueMetaInterface.TYPE_BIGNUMBER:
+						BigDecimal bd = mi.getBigNumber(row, number);
+						if (meta.getEncloseNumbers()) {
+							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(String.valueOf(bd).getBytes());
+							data.fifoStream.write(delimiter.getBytes());
+						} else {
+							data.fifoStream.write(String.valueOf(bd).getBytes());
+						}
+						break;
+					case ValueMetaInterface.TYPE_DATE:
+						Date dt = mi.getDate(row, number);
+						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(sdfDate.format(dt).getBytes());
+						data.fifoStream.write(delimiter.getBytes());
+						break;
+					case ValueMetaInterface.TYPE_BOOLEAN:
+						Boolean b = mi.getBoolean(row, number);
+						data.fifoStream.write(delimiter.getBytes());
+						if (b.booleanValue()) {
+							data.fifoStream.write("Y".getBytes());
+						} else {
+							data.fifoStream.write("N".getBytes());
+						}
+						data.fifoStream.write(delimiter.getBytes());
+						break;
+					case ValueMetaInterface.TYPE_BINARY:
+						byte[] byt = mi.getBinary(row, number);
+						// String string="";
+						// try {
+						// string=new String(byt,endocing);}
+						// catch (Exception e) {
+						// TODO: handle exception
+						// }
+						// string=string.replace("\r", "").replace("\n", "").replace(delimiter,
+						// "gennlife").replace("\t","").replaceAll("\0x00", "").replaceAll("\u0000",
+						// "");
+						String string = output.bytesToHexString(byt);
+						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(string.getBytes());
+						data.fifoStream.write(delimiter.getBytes());
+						break;
+					case ValueMetaInterface.TYPE_TIMESTAMP:
+						Date time = mi.getDate(row, number);
+						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(sdfDateTime.format(time).getBytes());
+						data.fifoStream.write(delimiter.getBytes());
+						break;
+					default:
+						throw new KettleException(BaseMessages.getString(PKG,
+								"GPLoadDataOutput.Exception.TypeNotSupported", v.getType()));
+					}
+				}
+			}
+			data.fifoStream.write(Const.CR.getBytes());
+		} catch (IOException e) {
+			throw new KettleException(e.getMessage());
+		}
+	}
+
+	public void setparam(RowMetaInterface mi)throws KettleException
+	{
+		enclosure = meta.getEnclosure();
+		if (enclosure == null) {
+			enclosure = "";
+		} else {
+			enclosure = environmentSubstitute(enclosure);
+		}
+
+		delimiter = meta.getDelimiter();
+		if (delimiter == null) {
+			throw new KettleException(BaseMessages.getString(PKG, "GPload.Exception.DelimiterMissing"));
+		} else {
+			delimiter = environmentSubstitute(delimiter);
+			if (Const.isEmpty(delimiter)) {
+				throw new KettleException(BaseMessages.getString(PKG, "GPload.Exception.DelimiterMissing"));
+			}
+		}
+		// 增加自动识别字段
+		if (!(meta.getFieldTable().length > 0)) {
+			meta.setFieldStream(mi.getFieldNames());
+		}
+
+		// Setup up the fields we need to take for each of the rows
+		// as this speeds up processing.
+		fieldNumbers = new int[meta.getFieldStream().length];
+		for (int i = 0; i < fieldNumbers.length; i++) {
+			fieldNumbers[i] = mi.indexOfValue(meta.getFieldStream()[i]);
+			if (fieldNumbers[i] < 0) {
+				throw new KettleException(BaseMessages.getString(PKG,
+						"GPLoadDataOutput.Exception.FieldNotFound", meta.getFieldStream()[i]));
+			}
+		}
+
+		sdfDate = new SimpleDateFormat("yyyy-MM-dd");
+		sdfDateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	}
+	
+	
+	
 	public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {
 		meta = (GPLoadMeta) smi;
 		data = (GPLoadData) sdi;
@@ -687,8 +879,12 @@ public class GPLoad extends BaseStep implements StepInterface {
 					if (output != null) {
 						// Close the output
 						try {
-							output.close();
-						} catch (IOException e) {
+							if (meta.isfifo()) {
+								this.closeOutput();
+							} else {
+								output.close();
+							}
+						} catch (Exception e) {
 							throw new KettleException("Error while closing output", e);
 						}
 
@@ -746,6 +942,7 @@ public class GPLoad extends BaseStep implements StepInterface {
 					}
 
 					output = new GPLoadDataOutput(this, meta, log.getLogLevel());
+					setparam(getInputRowMeta());
 
 					// if ( GPLoadMeta.METHOD_AUTO_CONCURRENT.equals(meta.getLoadMethod()) )
 					// {
@@ -759,46 +956,45 @@ public class GPLoad extends BaseStep implements StepInterface {
 
 						// if we actually wrote at least one row
 						// we do this
-						String commline=createCommandLine(meta, true);
-						gploadexec gploadexec=new gploadexec(commline,true);
 						if (meta.isfifo()) {
+							String commline = createCommandLine(meta, true);
+							data.gploadexec = new Gploadexec(commline, true);
 							createControlFile(meta);
 							if (!Const.isWindows()) {
 								try {
-								log.logBasic("Opening fifo " + output.dataFile + " for writing.");
-								OpenFifo openFifo = new OpenFifo(output.dataFile);
-								openFifo.start();
-								gploadexec.start();
+									log.logBasic("Opening fifo " + output.getdatafile() + " for writing.");
+									OpenFifo openFifo = new OpenFifo(output.getdatafile());
+									openFifo.start();
+									// data.gploadexec.start();
 
-								while (true) {
-									openFifo.join(200);
-									if (openFifo.getState() == Thread.State.TERMINATED) {
-										break;
-									}
+									while (true) {
+										openFifo.join(200);
+										if (openFifo.getState() == Thread.State.TERMINATED) {
+											break;
+										}
 
-									try {
-										gploadexec.checkExcn();
-									} catch (Exception e) {
-										// We need to open a stream to the fifo to unblock the fifo writer
-										// that was waiting for the sqlRunner that now isn't running
-										new BufferedInputStream(new FileInputStream(output.dataFile)).close();
-										openFifo.join();
-										logError("Make sure user has been granted the FILE privilege.");
-										logError("");
-										throw e;
-									}
+										try {
+											// data.gploadexec.checkExcn();
+										} catch (Exception e) {
+											// We need to open a stream to the fifo to unblock the fifo writer
+											// that was waiting for the sqlRunner that now isn't running
+											new BufferedInputStream(new FileInputStream(output.getdatafile())).close();
+											openFifo.join();
+											logError("Make sure user has been granted the FILE privilege.");
+											logError("");
+											throw e;
+										}
 
-									try {
-										openFifo.checkExcn();
-									} catch (Exception e) {
-										throw e;
+										try {
+											// openFifo.checkExcn();
+										} catch (Exception e) {
+											throw e;
+										}
 									}
-								}
-								output.fifoStream = openFifo.getFifoStream();
-								}catch (Exception e) {
+									data.fifoStream = openFifo.getFifoStream();
+								} catch (Exception e) {
 									logError(e.getMessage());
-									throw new KettleException(
-											BaseMessages.getString(PKG,e.getMessage()));
+									throw new KettleException(BaseMessages.getString(PKG, e.getMessage()));
 									// TODO: handle exception
 								}
 
@@ -810,10 +1006,9 @@ public class GPLoad extends BaseStep implements StepInterface {
 						// we create the control file but do not execute
 						if (meta.isfifo()) {
 							createControlFile(meta);
-							throw new KettleException(
-									BaseMessages.getString(PKG,"can not use fifo in manual"));
-						}else {
-							
+							throw new KettleException(BaseMessages.getString(PKG, "can not use fifo in manual"));
+						} else {
+
 						}
 						logBasic(BaseMessages.getString(PKG, "GPLoad.Info.MethodManual"));
 					} else {
@@ -821,12 +1016,12 @@ public class GPLoad extends BaseStep implements StepInterface {
 								BaseMessages.getString(PKG, "GPload.Execption.UnhandledLoadMethod", loadMethod));
 					}
 				}
-				if(meta.isfifo())
-				{
-					output.writeLinefifo(getInputRowMeta(), r);
-				}else {
-				output.writeLine(getInputRowMeta(), r);
-			}}
+				if (meta.isfifo()) {
+					writeLinefifo(getInputRowMeta(), r);
+				} else {
+					output.writeLine(getInputRowMeta(), r);
+				}
+			}
 			putRow(getInputRowMeta(), r);
 			incrementLinesOutput();
 
@@ -930,54 +1125,54 @@ public class GPLoad extends BaseStep implements StepInterface {
 		}
 		return string;
 	}
-	
-	
-	static class gploadexec extends Thread{
+
+	static class Gploadexec extends Thread {
 		private String commandLine;
 		private boolean waite;
-	    private Exception ex;
-		public gploadexec(String commandLinea,boolean waitea) {
-			this.commandLine=commandLinea;
-			this.waite=waitea;
+		private Exception ex;
+
+		public Gploadexec(String commandLinea, boolean waitea) {
+			this.commandLine = commandLinea;
+			this.waite = waitea;
 			// TODO Auto-generated constructor stub
 		}
+
 		public void run() {
-		      try {
-		  		Runtime rt = Runtime.getRuntime();
-		  		int gpLoadExitVal = 0;
-		  		try {
+			try {
+				Runtime rt = Runtime.getRuntime();
+				int gpLoadExitVal = 0;
+				try {
 
-		  			Process gploadProcess = rt.exec(commandLine);
+					Process gploadProcess = rt.exec(commandLine);
 
-		  			if (waite) {
-		  				// any error???
-		  				gpLoadExitVal = gploadProcess.waitFor();
-		  				if (gpLoadExitVal != 0) {
-		  					throw new KettleException(
-		  							BaseMessages.getString(PKG, "GPLoad.Log.ExitValuePsqlPath", "" + gpLoadExitVal));
-		  				}
-		  			}
-		  		} catch (KettleException ke) {
-		  			throw ke;
-		  		} catch (Exception ex) {
-		  			// Don't throw the message upwards, the message contains the password.
-		  			throw new KettleException("Error while executing \'" + commandLine + "\'. Exit value = " + gpLoadExitVal);
-		  		}
-		      } catch ( Exception ex ) {
-		    	 System.out.print(ex.getMessage());
-			        this.ex = ex;
-		      }
-		    }
+					if (waite) {
+						// any error???
+						gpLoadExitVal = gploadProcess.waitFor();
+						if (gpLoadExitVal != 0) {
+							throw new KettleException(
+									BaseMessages.getString(PKG, "GPLoad.Log.ExitValuePsqlPath", "" + gpLoadExitVal));
+						}
+					}
+				} catch (KettleException ke) {
+					throw ke;
+				} catch (Exception ex) {
+					// Don't throw the message upwards, the message contains the password.
+					throw new KettleException(
+							"Error while executing \'" + commandLine + "\'. Exit value = " + gpLoadExitVal);
+				}
+			} catch (Exception ex) {
+				System.out.print(ex.getMessage());
+				this.ex = ex;
+			}
+		}
 
-		    void checkExcn() throws Exception {
-		      // This is called from the main thread context to rethrow any saved
-		      // excn.
-		      if ( ex != null ) {
-		        throw ex;
-		      }
-		    }
+		void checkExcn() throws Exception {
+			// This is called from the main thread context to rethrow any saved
+			// excn.
+			if (ex != null) {
+				throw ex;
+			}
+		}
 	}
-	
-	
 
 }

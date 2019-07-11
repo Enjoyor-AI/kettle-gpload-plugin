@@ -17,9 +17,12 @@
 
 package org.pentaho.di.trans.steps.gpload;
 
+import java.io.OutputStream;
+
 import org.pentaho.di.core.database.Database;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
+import org.pentaho.di.trans.steps.gpload.GPLoad.Gploadexec;
 
 /**
  * Stores data for the GPLoad step.
@@ -30,6 +33,8 @@ import org.pentaho.di.trans.step.StepDataInterface;
 public class GPLoadData extends BaseStepData implements StepDataInterface {
   public Database db;
 
+  public OutputStream fifoStream;
+  public Gploadexec gploadexec;
   /**
    * Default constructor.
    */
