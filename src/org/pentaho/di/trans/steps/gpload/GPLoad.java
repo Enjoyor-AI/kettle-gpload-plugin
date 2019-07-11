@@ -17,6 +17,9 @@
 
 package org.pentaho.di.trans.steps.gpload;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+
 //
 // The "designer" notes of the Greenplum bulkloader:
 // ----------------------------------------------
@@ -32,10 +35,13 @@ package org.pentaho.di.trans.steps.gpload;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 import org.apache.commons.vfs2.FileObject;
@@ -55,6 +61,7 @@ import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
+import org.pentaho.di.trans.steps.gpload.GPLoadDataOutput.OpenFifo;
 
 /**
  * Performs a bulk load to an Greenplum table.
@@ -597,7 +604,7 @@ public class GPLoad extends BaseStep implements StepInterface {
 				// any error???
 				gpLoadExitVal = gploadProcess.waitFor();
 				logBasic(BaseMessages.getString(PKG, "GPLoad.Log.ExitValuePsqlPath", "" + gpLoadExitVal));
-				if (gpLoadExitVal != -0) {
+				if (gpLoadExitVal != 0) {
 					throw new KettleException(
 							BaseMessages.getString(PKG, "GPLoad.Log.ExitValuePsqlPath", "" + gpLoadExitVal));
 				}
@@ -646,8 +653,8 @@ public class GPLoad extends BaseStep implements StepInterface {
 		}
 
 		targetTableName = schemaName + "\"" + databaseMeta.quoteField(targetTableName) + "\"";
-		String[] sqls=new String[2];
-		sqls[0]="drop table " + targetTableName;
+		String[] sqls = new String[2];
+		sqls[0] = "drop table " + targetTableName;
 		String befsql = "create table " + targetTableName + " (";
 		if (tableFields.length > 0) {
 
@@ -660,7 +667,7 @@ public class GPLoad extends BaseStep implements StepInterface {
 		}
 		befsql = befsql.substring(0, befsql.length() - 1) + ");";
 		// meta, getInputRowMeta()
-		sqls[1]=befsql;
+		sqls[1] = befsql;
 		return sqls;
 
 	}
@@ -697,8 +704,10 @@ public class GPLoad extends BaseStep implements StepInterface {
 						if (getLinesOutput() > 0) {
 
 							// we do this
-							createControlFile(meta);
-							execute(meta, true);
+							if (!meta.isfifo()) {
+								createControlFile(meta);
+								execute(meta, true);
+							}
 						} else {
 							// we don't create a control file and execute
 							logBasic(BaseMessages.getString(PKG, "GPLoad.Info.NoRowsWritten"));
@@ -706,7 +715,9 @@ public class GPLoad extends BaseStep implements StepInterface {
 					} else if (GPLoadMeta.METHOD_MANUAL.equals(loadMethod)) {
 
 						// we create the control file but do not execute
-						createControlFile(meta);
+						if (!meta.isfifo()) {
+							createControlFile(meta);
+						}
 						logBasic(BaseMessages.getString(PKG, "GPLoad.Info.MethodManual"));
 					} else {
 						throw new KettleException(
@@ -723,10 +734,11 @@ public class GPLoad extends BaseStep implements StepInterface {
 						String sql[] = getsql(meta);
 						for (String string : sql) {
 							try {
-							Result res = data.db.execStatement(string);
-							}catch (Exception e) {
+								Result res = data.db.execStatement(string);
+							} catch (Exception e) {
 								logBasic(e.getMessage());
-							}}						
+							}
+						}
 						if (!data.db.isAutoCommit()) {
 							data.db.commit();
 						}
@@ -740,9 +752,81 @@ public class GPLoad extends BaseStep implements StepInterface {
 					// execute(meta, false);
 					// }
 					output.open(this, gploadProcess);
+					String loadMethod = meta.getLoadMethod();
+
+					// if it specified that we are to load at the end of processing
+					if (GPLoadMeta.METHOD_AUTO_END.equals(loadMethod)) {
+
+						// if we actually wrote at least one row
+						// we do this
+						String commline=createCommandLine(meta, true);
+						gploadexec gploadexec=new gploadexec(commline,true);
+						if (meta.isfifo()) {
+							createControlFile(meta);
+							if (!Const.isWindows()) {
+								try {
+								log.logBasic("Opening fifo " + output.dataFile + " for writing.");
+								OpenFifo openFifo = new OpenFifo(output.dataFile);
+								openFifo.start();
+								gploadexec.start();
+
+								while (true) {
+									openFifo.join(200);
+									if (openFifo.getState() == Thread.State.TERMINATED) {
+										break;
+									}
+
+									try {
+										gploadexec.checkExcn();
+									} catch (Exception e) {
+										// We need to open a stream to the fifo to unblock the fifo writer
+										// that was waiting for the sqlRunner that now isn't running
+										new BufferedInputStream(new FileInputStream(output.dataFile)).close();
+										openFifo.join();
+										logError("Make sure user has been granted the FILE privilege.");
+										logError("");
+										throw e;
+									}
+
+									try {
+										openFifo.checkExcn();
+									} catch (Exception e) {
+										throw e;
+									}
+								}
+								output.fifoStream = openFifo.getFifoStream();
+								}catch (Exception e) {
+									logError(e.getMessage());
+									throw new KettleException(
+											BaseMessages.getString(PKG,e.getMessage()));
+									// TODO: handle exception
+								}
+
+							}
+						}
+
+					} else if (GPLoadMeta.METHOD_MANUAL.equals(loadMethod)) {
+
+						// we create the control file but do not execute
+						if (meta.isfifo()) {
+							createControlFile(meta);
+							throw new KettleException(
+									BaseMessages.getString(PKG,"can not use fifo in manual"));
+						}else {
+							
+						}
+						logBasic(BaseMessages.getString(PKG, "GPLoad.Info.MethodManual"));
+					} else {
+						throw new KettleException(
+								BaseMessages.getString(PKG, "GPload.Execption.UnhandledLoadMethod", loadMethod));
+					}
 				}
+				if(meta.isfifo())
+				{
+					output.writeLinefifo(getInputRowMeta(), r);
+				}else {
 				output.writeLine(getInputRowMeta(), r);
-			}
+			}}
 			putRow(getInputRowMeta(), r);
 			incrementLinesOutput();
 
@@ -776,7 +860,6 @@ public class GPLoad extends BaseStep implements StepInterface {
 				} else {
 					data.db.connect(getPartitionID());
 				}
-			
 
 			} catch (Exception e) {
 				// TODO: handle exception
@@ -847,5 +930,54 @@ public class GPLoad extends BaseStep implements StepInterface {
 		}
 		return string;
 	}
+	
+	
+	static class gploadexec extends Thread{
+		private String commandLine;
+		private boolean waite;
+	    private Exception ex;
+		public gploadexec(String commandLinea,boolean waitea) {
+			this.commandLine=commandLinea;
+			this.waite=waitea;
+			// TODO Auto-generated constructor stub
+		}
+		public void run() {
+		      try {
+		  		Runtime rt = Runtime.getRuntime();
+		  		int gpLoadExitVal = 0;
+		  		try {
+
+		  			Process gploadProcess = rt.exec(commandLine);
+
+		  			if (waite) {
+		  				// any error???
+		  				gpLoadExitVal = gploadProcess.waitFor();
+		  				if (gpLoadExitVal != 0) {
+		  					throw new KettleException(
+		  							BaseMessages.getString(PKG, "GPLoad.Log.ExitValuePsqlPath", "" + gpLoadExitVal));
+		  				}
+		  			}
+		  		} catch (KettleException ke) {
+		  			throw ke;
+		  		} catch (Exception ex) {
+		  			// Don't throw the message upwards, the message contains the password.
+		  			throw new KettleException("Error while executing \'" + commandLine + "\'. Exit value = " + gpLoadExitVal);
+		  		}
+		      } catch ( Exception ex ) {
+		    	 System.out.print(ex.getMessage());
+			        this.ex = ex;
+		      }
+		    }
+
+		    void checkExcn() throws Exception {
+		      // This is called from the main thread context to rethrow any saved
+		      // excn.
+		      if ( ex != null ) {
+		        throw ex;
+		      }
+		    }
+	}
+	
+	
 
 }

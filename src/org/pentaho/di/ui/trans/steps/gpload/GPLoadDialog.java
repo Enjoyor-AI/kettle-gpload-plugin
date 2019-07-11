@@ -111,6 +111,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
   private Button wEraseFiles;
   private Button wlowerTables;
   private Button wAutoCreatetables;
+  private Button wfifo;
   private GPLoadMeta input;
   private TextVar wDelimiter;
   private Text wUpdateCondition;
@@ -753,7 +754,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     this.wEraseFiles.setSelection( input.isEraseFiles() );
     this.wlowerTables.setSelection( input.islowertables() );
     this.wAutoCreatetables.setSelection( input.isautocreatetable() );
-
+    this.wfifo.setSelection(input.isfifo());
     String method = input.getLoadMethod();
     // if ( GPLoadMeta.METHOD_AUTO_CONCURRENT.equals(method) )
     // {
@@ -851,6 +852,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     inf.setLocalhostPort( wLocalhostPort.getText() );
     inf.setDelimiter( wDelimiter.getText() );
     inf.setUpdateCondition( wUpdateCondition.getText() );
+    inf.setfifo(wfifo.getSelection());
 
     /*
      * Set the loadmethod
@@ -1348,6 +1350,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     fdLogFile.top = new FormAttachment( wErrorTable, margin );
     fdLogFile.right = new FormAttachment( wbLogFile, -margin );
     wLogFile.setLayoutData( fdLogFile );
+    
 
     // Data file line
     Label wlDataFile = new Label( wGPConfigTabComp, SWT.RIGHT );
@@ -1393,13 +1396,38 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     fdDelimiter.right = new FormAttachment( 100, 0 );
     wDelimiter.setLayoutData( fdDelimiter );
 
+    
+
+    //fifo
+    Label wlfifo = new Label( wGPConfigTabComp, SWT.RIGHT );
+    wlfifo.setText( BaseMessages.getString( PKG, "GPLoadDialog.fifo.Label" ) );
+    props.setLook( wlfifo );
+    FormData fdlfifo = new FormData();
+    fdlfifo.left = new FormAttachment( 0, 0 );
+    fdlfifo.top = new FormAttachment( wlDataFile, margin );
+    fdlfifo.right = new FormAttachment( middle, -margin );
+    wlfifo.setLayoutData( fdlfifo );
+    wfifo = new Button( wGPConfigTabComp, SWT.CHECK );
+    props.setLook( wfifo );
+    FormData fdfifo = new FormData();
+    fdfifo.left = new FormAttachment( middle, 0 );
+    fdfifo.top = new FormAttachment( wlDataFile, margin );
+    fdfifo.right = new FormAttachment( 100, 0 );
+    wfifo.setLayoutData( fdfifo );
+    wfifo.addSelectionListener( new SelectionAdapter() {
+      public void widgetSelected( SelectionEvent e ) {
+        input.setChanged();
+      }
+    } );
+    
+    
     // NULL_AS parameter
     Label wlNullAs = new Label( wGPConfigTabComp, SWT.RIGHT );
     wlNullAs.setText( BaseMessages.getString( PKG, "GPLoadDialog.NullAs.Label" ) );
     props.setLook( wlNullAs );
     FormData fdlNullAs = new FormData();
     fdlNullAs.left = new FormAttachment( 0, 0 );
-    fdlNullAs.top = new FormAttachment( wDataFile, margin );
+    fdlNullAs.top = new FormAttachment( wlfifo, margin );
     fdlNullAs.right = new FormAttachment( middle, -margin );
     wlNullAs.setLayoutData( fdlNullAs );
 
@@ -1408,7 +1436,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     wNullAs.addModifyListener( lsMod );
     FormData fdNullAs = new FormData();
     fdNullAs.left = new FormAttachment( middle, 0 );
-    fdNullAs.top = new FormAttachment( wDataFile, margin );
+    fdNullAs.top = new FormAttachment( wlfifo, margin );
     wNullAs.setLayoutData( fdNullAs );
 
     // Control encoding line

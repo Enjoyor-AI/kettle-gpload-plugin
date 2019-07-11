@@ -126,6 +126,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 
 	private boolean lowertables;
 	private boolean autocreatetable;
+	private boolean fifo;
 
 	/** Boolean to indicate that numbers are to be enclosed */
 	private boolean encloseNumbers;
@@ -324,6 +325,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 			wtEncoding = XMLHandler.getTagValue(stepnode, "wtEncoding");
 			eraseFiles = "Y".equalsIgnoreCase(XMLHandler.getTagValue(stepnode, "erase_files"));
 			lowertables = "Y".equalsIgnoreCase(XMLHandler.getTagValue(stepnode, "lowertables"));
+			fifo="Y".equalsIgnoreCase(XMLHandler.getTagValue(stepnode, "fifo"));
 			autocreatetable = "Y".equalsIgnoreCase(XMLHandler.getTagValue(stepnode, "autocreatetable"));
 
 			encoding = XMLHandler.getTagValue(stepnode, "encoding");
@@ -399,6 +401,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 		eraseFiles = true;
 		lowertables = true;
 		autocreatetable=true;
+		fifo=true;
 		updateCondition = "";
 
 		allocate(0);
@@ -429,6 +432,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 		retval.append("    ").append(XMLHandler.addTagValue("erase_files", eraseFiles));
 		retval.append("    ").append(XMLHandler.addTagValue("lowertables", lowertables));
 		retval.append("    ").append(XMLHandler.addTagValue("autocreatetable", autocreatetable));
+		retval.append("    ").append(XMLHandler.addTagValue("fifo", fifo));
 		retval.append("    ").append(XMLHandler.addTagValue("encoding", encoding));
 		retval.append("    ").append(XMLHandler.addTagValue("enclose_numbers", (encloseNumbers ? "Y" : "N")));
 		retval.append("    ").append(XMLHandler.addTagValue("localhost_port", localhostPort));
@@ -476,6 +480,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 			eraseFiles = rep.getStepAttributeBoolean(id_step, "erase_files");
 			lowertables = rep.getStepAttributeBoolean(id_step, "lowertables");
 			autocreatetable = rep.getStepAttributeBoolean(id_step, "autocreatetable");
+			fifo = rep.getStepAttributeBoolean(id_step, "fifo");
 			encoding = rep.getStepAttributeString(id_step, "encoding");
 			localhostPort = rep.getStepAttributeString(id_step, "localhost_port");
 			encloseNumbers = (rep.getStepAttributeString(id_step, "enclose_numbers").equalsIgnoreCase("Y") ? true
@@ -527,6 +532,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 			rep.saveStepAttribute(id_transformation, id_step, "wtEncoding", wtEncoding);
 			rep.saveStepAttribute(id_transformation, id_step, "erase_files", eraseFiles);
 			rep.saveStepAttribute(id_transformation, id_step, "lowertables", lowertables);
+			rep.saveStepAttribute(id_transformation, id_step, "fifo", fifo);
 			rep.saveStepAttribute(id_transformation, id_step, "autocreatetable", autocreatetable);
 			rep.saveStepAttribute(id_transformation, id_step, "encoding", encoding);
 			rep.saveStepAttribute(id_transformation, id_step, "enclose_numbers", (encloseNumbers ? "Y" : "N"));
@@ -939,6 +945,14 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 	public void setautocreatetable(boolean autocreate)
 	{
 		this.autocreatetable=autocreate;
+	}
+	public void setfifo(boolean wfifo)
+	{
+		this.fifo=wfifo;
+	}
+	public boolean isfifo()
+	{
+		return fifo;
 	}
 
 	public String getMaxErrors() {
