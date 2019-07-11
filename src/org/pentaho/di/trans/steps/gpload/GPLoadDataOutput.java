@@ -174,7 +174,7 @@ public class GPLoadDataOutput {
 				}
 			}
 			// 增加自动识别字段
-			if (!(meta.getFieldTable().length > 0)) {
+			if (!(meta.getFieldStream().length > 0)) {
 				meta.setFieldStream(mi.getFieldNames());
 			}
 
