@@ -35,6 +35,7 @@ import org.pentaho.di.core.logging.LogChannelInterface;
 import org.pentaho.di.core.logging.LogLevel;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.ValueMetaInterface;
+import org.pentaho.di.core.util.StreamLogger;
 import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.i18n.BaseMessages;
 
@@ -142,6 +143,10 @@ public class GPLoadDataOutput {
 						String chmodCmd = "chmod 666 " + dataFile;
 						log.logBasic("Setting FIFO file permissings using this command : " + chmodCmd);
 						Process chmodProcess = rt.exec(chmodCmd);
+						StreamLogger errorLogger = new StreamLogger( log, chmodProcess.getErrorStream(), "chmodError" );
+						StreamLogger outputLogger = new StreamLogger( log, chmodProcess.getInputStream(), "chmodOuptut" );
+				        new Thread( errorLogger ).start();
+				        new Thread( outputLogger ).start();
 						result = chmodProcess.waitFor();
 						if (result != 0) {
 							throw new Exception("Return code " + result + " received from statement : " + chmodCmd);
@@ -157,38 +162,7 @@ public class GPLoadDataOutput {
 		}
 	}
 
-	static class OpenFifo extends Thread {
-		private BufferedOutputStream fifoStream = null;
-		private Exception ex;
-		private String fifoName;
-		private int size;
-
-		OpenFifo(String fifoName) {
-			this.fifoName = fifoName;
-		}
-
-		public void run() {
-
-			try {
-				fifoStream = new BufferedOutputStream(new FileOutputStream(OpenFifo.this.fifoName));
-			} catch (Exception ex) {
-				System.out.print(ex.getMessage());
-				this.ex = ex;
-			}
-		}
-
-		void checkExcn() throws Exception {
-			// This is called from the main thread context to rethrow any saved
-			// excn.
-			if (ex != null) {
-				throw ex;
-			}
-		}
-
-		BufferedOutputStream getFifoStream() {
-			return fifoStream;
-		}
-	}
+	
 
 	public void close() throws IOException {
 		if (output != null) {
@@ -255,13 +229,12 @@ public class GPLoadDataOutput {
 				}
 			}
 			// 增加自动识别字段
-			if (!(meta.getFieldTable().length > 0)) {
+			if (!(meta.getFieldStream().length > 0)) {
 				meta.setFieldStream(mi.getFieldNames());
 			}
 
 			// Setup up the fields we need to take for each of the rows
 			// as this speeds up processing.
-			log.logBasic(String.valueOf(meta.getFieldStream().length));
 			fieldNumbers = new int[meta.getFieldStream().length];
 			for (int i = 0; i < fieldNumbers.length; i++) {
 				fieldNumbers[i] = mi.indexOfValue(meta.getFieldStream()[i]);
