@@ -183,10 +183,10 @@ public class GPLoad extends BaseStep implements StepInterface {
 			schemaName = "\"" + schemaName + "\".";
 		}
 		if (meta.islowertables()) {
-			targetTableName = schemaName.toLowerCase() + "\"" + databaseMeta.quoteField(targetTableName).toLowerCase()
+			targetTableName = schemaName.toLowerCase() + "\"" + targetTableName.toLowerCase()
 					+ "\"";
 		} else {
-			targetTableName = schemaName + "\"" + databaseMeta.quoteField(targetTableName) + "\"";
+			targetTableName = schemaName + "\"" + targetTableName + "\"";
 		}
 
 		String loadAction = meta.getLoadAction();
