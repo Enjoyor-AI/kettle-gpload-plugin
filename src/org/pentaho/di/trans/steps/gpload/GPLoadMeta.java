@@ -145,6 +145,8 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 	private String truncate;
 	// wtEncoding
 	private String wtEncoding;
+	//wReplace
+	private String wtReplace;
 
 	/*
 	 * Encodings supported by GPLoad. This list was obtained from the GPAAdminGuide.
@@ -323,6 +325,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 			maxlinelength = XMLHandler.getTagValue(stepnode, "maxlinelength");
 			truncate = XMLHandler.getTagValue(stepnode, "truncate");
 			wtEncoding = XMLHandler.getTagValue(stepnode, "wtEncoding");
+			wtReplace=XMLHandler.getTagValue(stepnode, "wtreplace");
 			eraseFiles = "Y".equalsIgnoreCase(XMLHandler.getTagValue(stepnode, "erase_files"));
 			lowertables = "Y".equalsIgnoreCase(XMLHandler.getTagValue(stepnode, "lowertables"));
 			fifo="Y".equalsIgnoreCase(XMLHandler.getTagValue(stepnode, "fifo"));
@@ -403,6 +406,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 		autocreatetable=true;
 		fifo=true;
 		updateCondition = "";
+		wtReplace="gennlife";
 
 		allocate(0);
 		allocateLocalHosts(0);
@@ -429,6 +433,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 		retval.append("    ").append(XMLHandler.addTagValue("maxlinelength", maxlinelength));
 		retval.append("    ").append(XMLHandler.addTagValue("truncate", truncate));
 		retval.append("    ").append(XMLHandler.addTagValue("wtEncoding", wtEncoding));
+		retval.append("    ").append(XMLHandler.addTagValue("wtreplace", wtReplace));		
 		retval.append("    ").append(XMLHandler.addTagValue("erase_files", eraseFiles));
 		retval.append("    ").append(XMLHandler.addTagValue("lowertables", lowertables));
 		retval.append("    ").append(XMLHandler.addTagValue("autocreatetable", autocreatetable));
@@ -477,6 +482,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 			maxlinelength = rep.getStepAttributeString(id_step, "maxlinelength");
 			truncate = rep.getStepAttributeString(id_step, "truncate");
 			wtEncoding = rep.getStepAttributeString(id_step, "wtEncoding");
+			wtReplace = rep.getStepAttributeString(id_step, "wtreplace");
 			eraseFiles = rep.getStepAttributeBoolean(id_step, "erase_files");
 			lowertables = rep.getStepAttributeBoolean(id_step, "lowertables");
 			autocreatetable = rep.getStepAttributeBoolean(id_step, "autocreatetable");
@@ -530,6 +536,7 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 			rep.saveStepAttribute(id_transformation, id_step, "maxlinelength", maxlinelength);
 			rep.saveStepAttribute(id_transformation, id_step, "truncate", truncate);
 			rep.saveStepAttribute(id_transformation, id_step, "wtEncoding", wtEncoding);
+			rep.saveStepAttribute(id_transformation, id_step, "wtreplace", wtReplace);
 			rep.saveStepAttribute(id_transformation, id_step, "erase_files", eraseFiles);
 			rep.saveStepAttribute(id_transformation, id_step, "lowertables", lowertables);
 			rep.saveStepAttribute(id_transformation, id_step, "fifo", fifo);
@@ -885,6 +892,13 @@ public class GPLoadMeta extends BaseStepMeta implements StepMetaInterface {
 
 	public void setwtencod(String wtencod) {
 		this.wtEncoding = wtencod;
+	}
+	
+	public String getwtreplace() {
+		return wtReplace;
+	}
+	public void setwtreplace(String wtreplace) {
+		this.wtReplace=wtreplace;
 	}
 
 	public void setLoadAction(String action) {

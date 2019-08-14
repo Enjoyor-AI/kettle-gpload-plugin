@@ -132,7 +132,7 @@ public class GPLoadDataOutput {
 					if (!fifoFile.exists()) {
 						// MKFIFO!
 						//
-						String mkFifoCmd = "mkfifo " + dataFile;
+						String mkFifoCmd = "mkfifo -m 666 " + dataFile;
 						log.logBasic("Creating FIFO file using this command : " + mkFifoCmd);
 						Process mkFifoProcess = rt.exec(mkFifoCmd);
 						int result = mkFifoProcess.waitFor();

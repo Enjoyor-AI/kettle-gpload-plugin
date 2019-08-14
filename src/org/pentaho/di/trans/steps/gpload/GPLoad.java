@@ -743,6 +743,22 @@ public class GPLoad extends BaseStep implements StepInterface {
 	public void writeLinefifo(RowMetaInterface mi, Object[] row) throws KettleException {
 		try {
 			// Write the data to the output
+			enclosure = meta.getEnclosure();
+			if (enclosure == null) {
+				enclosure = "";
+			} else {
+				enclosure = environmentSubstitute(enclosure);
+			}
+			delimiter = meta.getDelimiter();
+			if (delimiter == null) {
+				throw new KettleException(BaseMessages.getString(PKG, "GPload.Exception.DelimiterMissing"));
+			} else {
+				delimiter = environmentSubstitute(delimiter);
+				if (Const.isEmpty(delimiter)) {
+					throw new KettleException(BaseMessages.getString(PKG, "GPload.Exception.DelimiterMissing"));
+				}
+			}
+
 			ValueMetaInterface v = null;
 			int number = 0;
 			String endocing = meta.getwtencod();
@@ -766,24 +782,24 @@ public class GPLoad extends BaseStep implements StepInterface {
 						// s = createEscapedString( s, delimiter );
 						// }
 						if (s != null) {
-							s = s.replace("\r", "").replace("\n", "").replace(delimiter, "gennlife").replace("\t", "")
+							s = s.replace("\r", "").replace("\n", "").replace(delimiter, meta.getwtreplace()).replace("\t", "")
 									.replaceAll("\0x00", "").replaceAll("\u0000", "");
 						}
 						// String s1=s.replace("\r", "");
 						// String s2=s1.replace("\n", "");
 						// String s3=s2.replace("\t", "");
 						// String s4 =s3.replace(delimiter, "gennlife");
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						data.fifoStream.write(s.getBytes());
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 
 						break;
 					case ValueMetaInterface.TYPE_INTEGER:
 						Long l = mi.getInteger(row, number);
 						if (meta.getEncloseNumbers()) {
-							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(enclosure.getBytes());
 							data.fifoStream.write(String.valueOf(1).getBytes());
-							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(enclosure.getBytes());
 						} else {
 							data.fifoStream.write(String.valueOf(1).getBytes());
 						}
@@ -792,9 +808,9 @@ public class GPLoad extends BaseStep implements StepInterface {
 						Double d = mi.getNumber(row, number);
 						if (meta.getEncloseNumbers()) {
 
-							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(enclosure.getBytes());
 							data.fifoStream.write(String.valueOf(d).getBytes());
-							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(enclosure.getBytes());
 						} else {
 							data.fifoStream.write(String.valueOf(d).getBytes());
 						}
@@ -802,28 +818,28 @@ public class GPLoad extends BaseStep implements StepInterface {
 					case ValueMetaInterface.TYPE_BIGNUMBER:
 						BigDecimal bd = mi.getBigNumber(row, number);
 						if (meta.getEncloseNumbers()) {
-							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(enclosure.getBytes());
 							data.fifoStream.write(String.valueOf(bd).getBytes());
-							data.fifoStream.write(delimiter.getBytes());
+							data.fifoStream.write(enclosure.getBytes());
 						} else {
 							data.fifoStream.write(String.valueOf(bd).getBytes());
 						}
 						break;
 					case ValueMetaInterface.TYPE_DATE:
 						Date dt = mi.getDate(row, number);
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						data.fifoStream.write(sdfDate.format(dt).getBytes());
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						break;
 					case ValueMetaInterface.TYPE_BOOLEAN:
 						Boolean b = mi.getBoolean(row, number);
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						if (b.booleanValue()) {
 							data.fifoStream.write("Y".getBytes());
 						} else {
 							data.fifoStream.write("N".getBytes());
 						}
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						break;
 					case ValueMetaInterface.TYPE_BINARY:
 						byte[] byt = mi.getBinary(row, number);
@@ -837,15 +853,15 @@ public class GPLoad extends BaseStep implements StepInterface {
 						// "gennlife").replace("\t","").replaceAll("\0x00", "").replaceAll("\u0000",
 						// "");
 						String string = output.bytesToHexString(byt);
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						data.fifoStream.write(string.getBytes());
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						break;
 					case ValueMetaInterface.TYPE_TIMESTAMP:
 						Date time = mi.getDate(row, number);
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						data.fifoStream.write(sdfDateTime.format(time).getBytes());
-						data.fifoStream.write(delimiter.getBytes());
+						data.fifoStream.write(enclosure.getBytes());
 						break;
 					default:
 						throw new KettleException(BaseMessages.getString(PKG,
@@ -854,7 +870,7 @@ public class GPLoad extends BaseStep implements StepInterface {
 				}
 			}
 			data.fifoStream.write(Const.CR.getBytes());
-			logBasic("waite success");
+			data.fifoStream.flush();
 		} catch (IOException e) {
 			throw new KettleException(e.getMessage());
 		}
@@ -965,13 +981,14 @@ public class GPLoad extends BaseStep implements StepInterface {
 									log.logBasic("Opening fifo " + output.getdatafile() + " for writing.");
 									OpenFifo openFifo = new OpenFifo(output.getdatafile(),268435456);
 									openFifo.start();
-									 data.gploadexec.start();
+									data.gploadexec.start();
 									while (true) {
 										openFifo.join(200);
 										if (openFifo.getState() == Thread.State.TERMINATED) {
 											break;
 										}
 										try {
+											
 											 data.gploadexec.checkExcn();
 										} catch (Exception e) {
 											// We need to open a stream to the fifo to unblock the fifo writer

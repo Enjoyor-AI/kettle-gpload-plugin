@@ -118,6 +118,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
   private TextVar wmaxlinelength;
   private TextVar wtruncate;
   private TextVar wtEncoding;
+  private TextVar wReplace;
 
   /**
    * List of ColumnInfo that should have the field names of the selected database table
@@ -755,6 +756,10 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     this.wlowerTables.setSelection( input.islowertables() );
     this.wAutoCreatetables.setSelection( input.isautocreatetable() );
     this.wfifo.setSelection(input.isfifo());
+    if(input.getwtreplace()!=null)
+    {
+    	wReplace.setText(input.getwtreplace());
+    }
     String method = input.getLoadMethod();
     // if ( GPLoadMeta.METHOD_AUTO_CONCURRENT.equals(method) )
     // {
@@ -846,6 +851,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     inf.settruncate(wtruncate.getText());
     inf.setwtencod(wtEncoding.getText());
     inf.setEncoding( wEncoding.getText() );
+    inf.setwtreplace(wReplace.getText());
     inf.setEraseFiles( wEraseFiles.getSelection() );
     inf.setlowertables(wlowerTables.getSelection());    
     inf.setautocreatetable(wAutoCreatetables.getSelection());  
@@ -1419,6 +1425,23 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
         input.setChanged();
       }
     } );
+    //wreplace
+    Label wlreplace = new Label( wGPConfigTabComp, SWT.RIGHT );
+    wlreplace.setText( BaseMessages.getString( PKG, "GPLoadDialog.replace.Label" ) );
+    props.setLook( wlreplace );
+    FormData fdlwreplace = new FormData();
+    fdlwreplace.left = new FormAttachment( 0, 0 );
+    fdlwreplace.top = new FormAttachment( wlfifo, margin );
+    fdlwreplace.right = new FormAttachment( middle, -margin );
+    wlreplace.setLayoutData( fdlwreplace );
+
+    wReplace = new TextVar( transMeta, wGPConfigTabComp, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    props.setLook( wReplace );
+    wReplace.addModifyListener( lsMod );
+    FormData fdwreplace = new FormData();
+    fdwreplace.left = new FormAttachment( middle, 0 );
+    fdwreplace.top = new FormAttachment( wlfifo, margin );
+    wReplace.setLayoutData( fdwreplace );
     
     
     // NULL_AS parameter
@@ -1427,7 +1450,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     props.setLook( wlNullAs );
     FormData fdlNullAs = new FormData();
     fdlNullAs.left = new FormAttachment( 0, 0 );
-    fdlNullAs.top = new FormAttachment( wlfifo, margin );
+    fdlNullAs.top = new FormAttachment( wlreplace, margin );
     fdlNullAs.right = new FormAttachment( middle, -margin );
     wlNullAs.setLayoutData( fdlNullAs );
 
@@ -1436,7 +1459,7 @@ public class GPLoadDialog extends BaseStepDialog implements StepDialogInterface 
     wNullAs.addModifyListener( lsMod );
     FormData fdNullAs = new FormData();
     fdNullAs.left = new FormAttachment( middle, 0 );
-    fdNullAs.top = new FormAttachment( wlfifo, margin );
+    fdNullAs.top = new FormAttachment( wlreplace, margin );
     wNullAs.setLayoutData( fdNullAs );
 
     // Control encoding line
